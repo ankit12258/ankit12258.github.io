@@ -2,330 +2,126 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ULTIMATE FUN ZONE</title>
+    <title>Live Click Battle</title>
     <style>
         body {
-            font-family: 'Comic Sans MS', cursive;
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5);
             text-align: center;
-            padding: 10px;
+            padding: 20px;
             margin: 0;
-            overflow-x: hidden;
         }
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .game {
+        .game-panel {
             background: rgba(255,255,255,0.9);
-            border-radius: 20px;
-            padding: 15px;
-            margin: 20px auto;
-            max-width: 95%;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            transition: transform 0.3s;
-        }
-        .game:hover {
-            transform: scale(1.02);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px auto;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         button {
-            background: #FF6B6B;
+            background: #4CAF50;
             color: white;
             border: none;
-            padding: 12px 25px;
+            padding: 15px 30px;
             border-radius: 50px;
-            font-size: 16px;
+            font-size: 18px;
             margin: 10px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         button:hover {
-            background: #FF5252;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #4CAF50;
         }
-        #ball {
-            width: 50px;
-            height: 50px;
-            background: #FF9E00;
-            border-radius: 50%;
-            position: relative;
-            margin: 20px auto;
-            cursor: pointer;
-        }
-        #typing-display {
-            font-size: 24px;
-            min-height: 40px;
-            margin: 15px;
-            color: #333;
-        }
-        #memory-board {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin: 20px auto;
-            max-width: 300px;
-        }
-        .memory-card {
-            height: 60px;
-            background: #6B5B95;
+        #leaderboard {
+            background: rgba(0,0,0,0.1);
+            padding: 15px;
             border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .memory-card.flipped {
-            background: white;
-            color: #333;
-        }
-        .creator-credit {
-            position: fixed;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <h1>🎮 ULTIMATE FUN ZONE 🎮</h1>
-    <p>Created by <span id="creator-name">ANKIT</span>! Refresh for new effects!</p>
-
-    <!-- Game 1: Super Clicker -->
-    <div class="game">
-        <h2>⚡ SUPER CLICKER ⚡</h2>
-        <p>Score: <span id="score">0</span></p>
-        <button id="clicker">SMASH ME!</button>
-        <div id="click-effects"></div>
+    <div class="game-panel">
+        <h1>🔥 LIVE CLICK BATTLE 🔥</h1>
+        <p>Compete against players worldwide in real-time!</p>
+        
+        <div id="player-info">
+            <h2>Your Score: <span id="score">0</span></h2>
+            <button id="clicker">CLICK TO WIN!</button>
+        </div>
     </div>
 
-    <!-- Game 2: Bouncy Ball -->
-    <div class="game">
-        <h2>🏀 BOUNCY BALL 🏀</h2>
-        <p>Click the ball to bounce it!</p>
-        <div id="ball"></div>
-        <p>Bounces: <span id="bounces">0</span></p>
+    <div class="game-panel" id="leaderboard">
+        <h2>🏆 GLOBAL LEADERBOARD</h2>
+        <div id="scores-list">Loading...</div>
     </div>
 
-    <!-- Game 3: Memory Game -->
-    <div class="game">
-        <h2>🧠 MEMORY CHALLENGE 🧠</h2>
-        <p>Find all matching pairs!</p>
-        <div id="memory-board"></div>
-        <p>Matches: <span id="matches">0</span>/8</p>
-        <button id="reset-memory">RESET</button>
-    </div>
-
-    <!-- Game 4: Reaction Test -->
-    <div class="game">
-        <h2>⏱️ REACTION TEST ⏱️</h2>
-        <p>Click when the box turns GREEN!</p>
-        <div id="reaction-box" style="width:100px;height:100px;margin:20px auto;background:red;"></div>
-        <p>Your time: <span id="reaction-time">0</span>ms</p>
-        <button id="start-reaction">START</button>
-    </div>
-
-    <div class="creator-credit">
-        Website and games created by <span id="footer-name">ANKIT</span> © 2024
-    </div>
-
-    <!-- Sound Effects -->
-    <audio id="click-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" preload="auto"></audio>
-    <audio id="bounce-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-quick-jump-arcade-game-239.mp3" preload="auto"></audio>
-    <audio id="match-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
-    <audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" preload="auto"></audio>
-    <audio id="reaction-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
-
+    <!-- Firebase Integration -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    
     <script>
-        const yourName = "ANKIT";
-        document.getElementById('creator-name').textContent = yourName;
-        document.getElementById('footer-name').textContent = yourName;
+        // ========================
+        // FIREBASE SETUP
+        // ========================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDubLMwib14sT3OS4bcKmQ7UFXgB_vrKPM",
+            authDomain: "clickbattle-7a8a2.firebaseapp.com",
+            databaseURL: "https://clickbattle-7a8a2-default-rtdb.firebaseio.com",
+            projectId: "clickbattle-7a8a2",
+            storageBucket: "clickbattle-7a8a2.appspot.com",
+            messagingSenderId: "935394160615",
+            appId: "1:935394160615:web:6d56d2000246734efe1742",
+            measurementId: "G-K7HNTKGGCV"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        function playSound(id) {
-            const sound = document.getElementById(id);
-            sound.currentTime = 0;
-            sound.play().catch(e => console.log("Sound blocked:", e));
-        }
-
+        // ========================
+        // GAME LOGIC
+        // ========================
         let score = 0;
-        const clicker = document.getElementById('clicker');
-        clicker.addEventListener('click', function() {
+        const playerId = "Player_" + Math.floor(Math.random() * 9000 + 1000);
+        const scoresRef = database.ref('scores');
+        
+        // Click handler
+        document.getElementById('clicker').addEventListener('click', function() {
             score++;
             document.getElementById('score').textContent = score;
-            playSound('click-sound');
-            this.textContent = `BOOM! (${score})`;
-            this.style.background = `hsl(${score*10 % 360}, 80%, 60%)`;
-            const explosion = document.createElement('div');
-            explosion.style.position = 'absolute';
-            explosion.style.left = `${Math.random()*80 + 10}%`;
-            explosion.style.top = '70%';
-            explosion.style.fontSize = '24px';
-            explosion.textContent = ['💥','✨','🌟','🎯','🔥'][Math.floor(Math.random()*5)];
-            document.getElementById('click-effects').appendChild(explosion);
-            setTimeout(() => explosion.remove(), 1000);
-        });
-
-        const ball = document.getElementById('ball');
-        let bounces = 0;
-        let yPosition = 0;
-        let ySpeed = 0;
-        const gravity = 0.4;
-
-        ball.addEventListener('click', function() {
-            ySpeed = -10;
-            bounces++;
-            document.getElementById('bounces').textContent = bounces;
-            this.style.background = `hsl(${Math.random()*360}, 80%, 60%)`;
-            playSound('bounce-sound');
-        });
-
-        function updateBall() {
-            ySpeed += gravity;
-            yPosition += ySpeed;
-            if (yPosition > 0) {
-                yPosition = 0;
-                ySpeed *= -0.8;
-                if (Math.abs(ySpeed) > 1) playSound('bounce-sound');
-            }
-            ball.style.transform = `translateY(${yPosition}px)`;
-            requestAnimationFrame(updateBall);
-        }
-        updateBall();
-
-        const memoryBoard = document.getElementById('memory-board');
-        const symbols = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
-        let cards = [...symbols, ...symbols];
-        let flippedCards = [];
-        let matchedPairs = 0;
-
-        cards.sort(() => Math.random() - 0.5);
-        cards.forEach((symbol, index) => {
-            const card = document.createElement('div');
-            card.className = 'memory-card';
-            card.dataset.index = index;
-            card.dataset.symbol = symbol;
-            card.textContent = '?';
-            card.addEventListener('click', flipCard);
-            memoryBoard.appendChild(card);
-        });
-
-        function flipCard() {
-            if (flippedCards.length < 2 && !this.classList.contains('flipped')) {
-                playSound('click-sound');
-                this.classList.add('flipped');
-                this.textContent = this.dataset.symbol;
-                flippedCards.push(this);
-                if (flippedCards.length === 2) checkMatch();
-            }
-        }
-
-        function checkMatch() {
-            const [card1, card2] = flippedCards;
-            if (card1.dataset.symbol === card2.dataset.symbol) {
-                playSound('match-sound');
-                matchedPairs++;
-                document.getElementById('matches').textContent = matchedPairs;
-                flippedCards = [];
-                if (matchedPairs === 8) {
-                    playSound('win-sound');
-                    setTimeout(() => alert('🎉 You won!'), 500);
-                }
-            } else {
-                setTimeout(() => {
-                    card1.classList.remove('flipped');
-                    card2.classList.remove('flipped');
-                    card1.textContent = '?';
-                    card2.textContent = '?';
-                    flippedCards = [];
-                }, 1000);
-            }
-        }
-
-        document.getElementById('reset-memory').addEventListener('click', () => {
-            playSound('click-sound');
-            memoryBoard.innerHTML = '';
-            cards.sort(() => Math.random() - 0.5);
-            matchedPairs = 0;
-            document.getElementById('matches').textContent = '0';
-            cards.forEach((symbol, index) => {
-                const card = document.createElement('div');
-                card.className = 'memory-card';
-                card.dataset.index = index;
-                card.dataset.symbol = symbol;
-                card.textContent = '?';
-                card.addEventListener('click', flipCard);
-                memoryBoard.appendChild(card);
+            
+            // Update Firebase
+            scoresRef.child(playerId).set({
+                score: score,
+                lastUpdated: firebase.database.ServerValue.TIMESTAMP
             });
+            
+            // Visual feedback
+            this.style.transform = "scale(0.95)";
+            setTimeout(() => { this.style.transform = "scale(1)"; }, 100);
         });
 
-        const reactionBox = document.getElementById('reaction-box');
-        const startBtn = document.getElementById('start-reaction');
-        let startTime;
-        let timeoutId;
-
-        startBtn.addEventListener('click', startReactionTest);
-
-        function startReactionTest() {
-            playSound('click-sound');
-            reactionBox.style.background = 'red';
-            document.getElementById('reaction-time').textContent = '0';
-            startBtn.disabled = true;
-            const delay = 1000 + Math.random() * 4000;
-            timeoutId = setTimeout(() => {
-                reactionBox.style.background = 'green';
-                startTime = new Date().getTime();
-                reactionBox.onclick = recordReactionTime;
-            }, delay);
-        }
-
-        function recordReactionTime() {
-            const endTime = new Date().getTime();
-            const reactionTime = endTime - startTime;
-            document.getElementById('reaction-time').textContent = reactionTime;
-            reactionBox.style.background = 'red';
-            reactionBox.onclick = null;
-            startBtn.disabled = false;
-            playSound('reaction-sound');
-            if (reactionTime < 300) {
-                reactionBox.style.boxShadow = '0 0 20px gold';
-                setTimeout(() => {
-                    reactionBox.style.boxShadow = 'none';
-                }, 1000);
-            }
-        }
-
-        function createFloatingEmoji() {
-            const emoji = document.createElement('div');
-            emoji.textContent = ['🎮', '🎲', '🎯', '🧩', '🎳', '🎰'][Math.floor(Math.random()*6)];
-            emoji.style.position = 'fixed';
-            emoji.style.left = Math.random() * 100 + 'vw';
-            emoji.style.top = '-50px';
-            emoji.style.fontSize = (Math.random() * 30 + 20) + 'px';
-            emoji.style.opacity = Math.random() * 0.5 + 0.3;
-            emoji.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
-            document.body.appendChild(emoji);
-            setTimeout(() => emoji.remove(), 15000);
-        }
-
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes float {
-                to { transform: translateY(calc(100vh + 50px)) rotate(${Math.random() * 360}deg); }
-            }
-        `;
-        document.head.appendChild(style);
-
-        setInterval(createFloatingEmoji, 1000);
+        // Live leaderboard
+        scoresRef.orderByChild('score').limitToLast(10).on('value', (snapshot) => {
+            const scores = [];
+            snapshot.forEach(child => {
+                scores.push({
+                    id: child.key,
+                    score: child.val().score
+                });
+            });
+            
+            // Display sorted (highest first)
+            const sorted = scores.sort((a,b) => b.score - a.score);
+            let leaderboardHTML = '<ol>';
+            sorted.forEach(player => {
+                const isYou = player.id === playerId ? ' (YOU!)' : '';
+                leaderboardHTML += `<li>${player.id}: ${player.score}${isYou}</li>`;
+            });
+            leaderboardHTML += '</ol>';
+            
+            document.getElementById('scores-list').innerHTML = leaderboardHTML;
+        });
     </script>
 </body>
-                                             </html>
+</html>
