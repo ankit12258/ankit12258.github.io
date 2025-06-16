@@ -1,164 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Drawing Battle - Multiplayer</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f0f0f0;
-            text-align: center;
-        }
-        canvas {
-            border: 2px solid #000;
-            background: #fff;
-            touch-action: none;
-        }
-        #controls {
-            margin-top: 10px;
-        }
-        #chatbox {
-            margin-top: 10px;
-        }
-        input[type=text] {
-            padding: 10px;
-            width: 60%;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 5px;
-        }
-        #status {
-            margin: 15px 0;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚗 Multiplayer Racing Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to top, #0f2027, #203a43, #2c5364);
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: #555;
+      border: 4px solid #fff;
+    }
+    #status {
+      color: white;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 20px;
+    }
+  </style>
 </head>
 <body>
-    <h1>🎨 Drawing Battle</h1>
-    <p id="status">Connecting...</p>
-    <canvas id="canvas" width="300" height="300"></canvas>
-    <div id="controls">
-        <button onclick="clearCanvas()">Clear</button>
-    </div>
-    <div id="chatbox">
-        <input id="guessInput" type="text" placeholder="Enter your guess...">
-        <button onclick="submitGuess()">Guess</button>
-    </div>
-    <audio id="correctSound" src="https://www.soundjay.com/button/sounds/button-4.mp3"></audio>
-    <audio id="wrongSound" src="https://www.soundjay.com/button/sounds/beep-07.mp3"></audio>
+  <canvas id="raceCanvas" width="600" height="400"></canvas>
+  <div id="status">Waiting for opponent...</div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDubLMwib14sT3OS4bcKmQ7UFXgB_vrKPM",
-            authDomain: "clickbattle-7a8a2.firebaseapp.com",
-            databaseURL: "https://clickbattle-7a8a2-default-rtdb.firebaseio.com",
-            projectId: "clickbattle-7a8a2",
-            storageBucket: "clickbattle-7a8a2.appspot.com",
-            messagingSenderId: "935394160615",
-            appId: "1:935394160615:web:6d56d2000246734efe1742"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDubLMwib14sT3OS4bcKmQ7UFXgB_vrKPM",
+      authDomain: "clickbattle-7a8a2.firebaseapp.com",
+      databaseURL: "https://clickbattle-7a8a2-default-rtdb.firebaseio.com",
+      projectId: "clickbattle-7a8a2",
+      storageBucket: "clickbattle-7a8a2.appspot.com",
+      messagingSenderId: "935394160615",
+      appId: "1:935394160615:web:6d56d2000246734efe1742"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        let drawing = false;
-        let isDrawer = false;
-        const playerId = "player" + Math.floor(Math.random() * 10000);
-        const roomRef = db.ref("rooms/room1");
+    const canvas = document.getElementById("raceCanvas");
+    const ctx = canvas.getContext("2d");
 
-        // Connect to room
-        roomRef.child("players").once("value", snapshot => {
-            const players = snapshot.val() || {};
-            const keys = Object.keys(players);
-            if (keys.length === 0) {
-                isDrawer = true;
-                roomRef.child("players").child(playerId).set({ drawer: true });
-                roomRef.child("currentWord").set(getRandomWord());
-            } else {
-                roomRef.child("players").child(playerId).set({ drawer: false });
-            }
-            document.getElementById("status").innerText = isDrawer ? "You are drawing!" : "Guess the word!";
-        });
+    let playerId = "Player_" + Math.floor(Math.random() * 10000);
+    let playersRef = db.ref("raceGame/players");
 
-        function drawLine(x, y, type) {
-            ctx.beginPath();
-            ctx.moveTo(type === "start" ? x : lastX, type === "start" ? y : lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            lastX = x;
-            lastY = y;
-        }
+    const carColors = ["red", "blue"];
+    let cars = {};
+    let positionY = playerId.endsWith("0") ? 150 : 250;
+    let myColor = playerId.endsWith("0") ? carColors[0] : carColors[1];
 
-        let lastX = 0, lastY = 0;
+    // Add self to database
+    playersRef.child(playerId).set({ x: 50, y: positionY, color: myColor });
+    playersRef.child(playerId).onDisconnect().remove();
 
-        canvas.addEventListener("mousedown", e => {
-            if (!isDrawer) return;
-            drawing = true;
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            drawLine(x, y, "start");
-            sendDraw(x, y, true);
-        });
+    document.getElementById("status").textContent = "Use arrow keys to race! 🚗💨";
 
-        canvas.addEventListener("mousemove", e => {
-            if (!drawing || !isDrawer) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            drawLine(x, y);
-            sendDraw(x, y);
-        });
+    document.addEventListener("keydown", (e) => {
+      const moveRef = playersRef.child(playerId);
+      moveRef.once("value").then((snap) => {
+        const pos = snap.val();
+        if (!pos) return;
+        let newX = pos.x;
+        if (e.key === "ArrowRight") newX += 10;
+        if (e.key === "ArrowLeft") newX -= 10;
+        moveRef.update({ x: newX });
+      });
+    });
 
-        canvas.addEventListener("mouseup", () => drawing = false);
-        canvas.addEventListener("mouseleave", () => drawing = false);
+    function drawCars(data) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let id in data) {
+        const car = data[id];
+        ctx.fillStyle = car.color;
+        ctx.fillRect(car.x, car.y, 50, 30);
+        ctx.strokeStyle = "#fff";
+        ctx.strokeRect(car.x, car.y, 50, 30);
+        ctx.fillStyle = "white";
+        ctx.fillText(id, car.x, car.y - 5);
+      }
+    }
 
-        function sendDraw(x, y, start = false) {
-            roomRef.child("drawing").push({ x, y, type: start ? "start" : "draw" });
-        }
-
-        roomRef.child("drawing").on("child_added", data => {
-            if (isDrawer) return;
-            const { x, y, type } = data.val();
-            drawLine(x, y, type);
-        });
-
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (isDrawer) roomRef.child("drawing").remove();
-        }
-
-        function getRandomWord() {
-            const words = ["cat", "car", "sun", "tree", "fish", "apple"];
-            return words[Math.floor(Math.random() * words.length)];
-        }
-
-        function submitGuess() {
-            const input = document.getElementById("guessInput");
-            const guess = input.value.toLowerCase();
-            input.value = "";
-            roomRef.child("currentWord").once("value", snapshot => {
-                const word = snapshot.val();
-                if (guess === word) {
-                    document.getElementById("correctSound").play();
-                    alert("🎉 Correct! You win!");
-                    clearCanvas();
-                    roomRef.child("drawing").remove();
-                    roomRef.child("currentWord").set(getRandomWord());
-                } else {
-                    document.getElementById("wrongSound").play();
-                }
-            });
-        }
-    </script>
+    playersRef.on("value", (snapshot) => {
+      const data = snapshot.val() || {};
+      cars = data;
+      drawCars(cars);
+    });
+  </script>
 </body>
 </html>
