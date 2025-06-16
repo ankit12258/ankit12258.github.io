@@ -86,11 +86,20 @@
             background: white;
             color: #333;
         }
+        .creator-credit {
+            position: fixed;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <h1>🎮 ULTIMATE FUN ZONE 🎮</h1>
-    <p>Created by YOU! Refresh for new effects!</p>
+    <p>Created by <span id="creator-name">ANKIT</span>! Refresh for new effects!</p>
 
     <!-- Game 1: Super Clicker -->
     <div class="game">
@@ -126,19 +135,36 @@
         <button id="start-reaction">START</button>
     </div>
 
+    <div class="creator-credit">
+        Website and games created by <span id="footer-name">ANKIT</span> © 2024
+    </div>
+
+    <!-- Sound Effects -->
+    <audio id="click-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" preload="auto"></audio>
+    <audio id="bounce-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-quick-jump-arcade-game-239.mp3" preload="auto"></audio>
+    <audio id="match-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
+    <audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" preload="auto"></audio>
+    <audio id="reaction-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
+
     <script>
-        // ===== GAME 1: SUPER CLICKER =====
+        const yourName = "ANKIT";
+        document.getElementById('creator-name').textContent = yourName;
+        document.getElementById('footer-name').textContent = yourName;
+
+        function playSound(id) {
+            const sound = document.getElementById(id);
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log("Sound blocked:", e));
+        }
+
         let score = 0;
         const clicker = document.getElementById('clicker');
         clicker.addEventListener('click', function() {
             score++;
             document.getElementById('score').textContent = score;
-            
-            // Visual effects
+            playSound('click-sound');
             this.textContent = `BOOM! (${score})`;
             this.style.background = `hsl(${score*10 % 360}, 80%, 60%)`;
-            
-            // Create explosion effect
             const explosion = document.createElement('div');
             explosion.style.position = 'absolute';
             explosion.style.left = `${Math.random()*80 + 10}%`;
@@ -146,51 +172,43 @@
             explosion.style.fontSize = '24px';
             explosion.textContent = ['💥','✨','🌟','🎯','🔥'][Math.floor(Math.random()*5)];
             document.getElementById('click-effects').appendChild(explosion);
-            
-            setTimeout(() => {
-                explosion.remove();
-            }, 1000);
+            setTimeout(() => explosion.remove(), 1000);
         });
 
-        // ===== GAME 2: BOUNCY BALL =====
         const ball = document.getElementById('ball');
         let bounces = 0;
         let yPosition = 0;
         let ySpeed = 0;
         const gravity = 0.4;
-        
+
         ball.addEventListener('click', function() {
             ySpeed = -10;
             bounces++;
             document.getElementById('bounces').textContent = bounces;
             this.style.background = `hsl(${Math.random()*360}, 80%, 60%)`;
+            playSound('bounce-sound');
         });
-        
+
         function updateBall() {
             ySpeed += gravity;
             yPosition += ySpeed;
-            
             if (yPosition > 0) {
                 yPosition = 0;
                 ySpeed *= -0.8;
+                if (Math.abs(ySpeed) > 1) playSound('bounce-sound');
             }
-            
             ball.style.transform = `translateY(${yPosition}px)`;
             requestAnimationFrame(updateBall);
         }
         updateBall();
 
-        // ===== GAME 3: MEMORY GAME =====
         const memoryBoard = document.getElementById('memory-board');
         const symbols = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
         let cards = [...symbols, ...symbols];
         let flippedCards = [];
         let matchedPairs = 0;
-        
-        // Shuffle cards
+
         cards.sort(() => Math.random() - 0.5);
-        
-        // Create board
         cards.forEach((symbol, index) => {
             const card = document.createElement('div');
             card.className = 'memory-card';
@@ -200,28 +218,26 @@
             card.addEventListener('click', flipCard);
             memoryBoard.appendChild(card);
         });
-        
+
         function flipCard() {
             if (flippedCards.length < 2 && !this.classList.contains('flipped')) {
+                playSound('click-sound');
                 this.classList.add('flipped');
                 this.textContent = this.dataset.symbol;
                 flippedCards.push(this);
-                
-                if (flippedCards.length === 2) {
-                    checkMatch();
-                }
+                if (flippedCards.length === 2) checkMatch();
             }
         }
-        
+
         function checkMatch() {
             const [card1, card2] = flippedCards;
-            
             if (card1.dataset.symbol === card2.dataset.symbol) {
+                playSound('match-sound');
                 matchedPairs++;
                 document.getElementById('matches').textContent = matchedPairs;
                 flippedCards = [];
-                
                 if (matchedPairs === 8) {
+                    playSound('win-sound');
                     setTimeout(() => alert('🎉 You won!'), 500);
                 }
             } else {
@@ -234,13 +250,13 @@
                 }, 1000);
             }
         }
-        
+
         document.getElementById('reset-memory').addEventListener('click', () => {
+            playSound('click-sound');
             memoryBoard.innerHTML = '';
             cards.sort(() => Math.random() - 0.5);
             matchedPairs = 0;
             document.getElementById('matches').textContent = '0';
-            
             cards.forEach((symbol, index) => {
                 const card = document.createElement('div');
                 card.className = 'memory-card';
@@ -252,19 +268,18 @@
             });
         });
 
-        // ===== GAME 4: REACTION TEST =====
         const reactionBox = document.getElementById('reaction-box');
         const startBtn = document.getElementById('start-reaction');
         let startTime;
         let timeoutId;
-        
+
         startBtn.addEventListener('click', startReactionTest);
-        
+
         function startReactionTest() {
+            playSound('click-sound');
             reactionBox.style.background = 'red';
             document.getElementById('reaction-time').textContent = '0';
             startBtn.disabled = true;
-            
             const delay = 1000 + Math.random() * 4000;
             timeoutId = setTimeout(() => {
                 reactionBox.style.background = 'green';
@@ -272,7 +287,7 @@
                 reactionBox.onclick = recordReactionTime;
             }, delay);
         }
-        
+
         function recordReactionTime() {
             const endTime = new Date().getTime();
             const reactionTime = endTime - startTime;
@@ -280,8 +295,7 @@
             reactionBox.style.background = 'red';
             reactionBox.onclick = null;
             startBtn.disabled = false;
-            
-            // Color feedback
+            playSound('reaction-sound');
             if (reactionTime < 300) {
                 reactionBox.style.boxShadow = '0 0 20px gold';
                 setTimeout(() => {
@@ -290,8 +304,6 @@
             }
         }
 
-        // ===== BACKGROUND EFFECTS =====
-        // Create floating emojis
         function createFloatingEmoji() {
             const emoji = document.createElement('div');
             emoji.textContent = ['🎮', '🎲', '🎯', '🧩', '🎳', '🎰'][Math.floor(Math.random()*6)];
@@ -302,13 +314,9 @@
             emoji.style.opacity = Math.random() * 0.5 + 0.3;
             emoji.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
             document.body.appendChild(emoji);
-            
-            setTimeout(() => {
-                emoji.remove();
-            }, 15000);
+            setTimeout(() => emoji.remove(), 15000);
         }
-        
-        // Add floating animation
+
         const style = document.createElement('style');
         style.textContent = `
             @keyframes float {
@@ -316,9 +324,8 @@
             }
         `;
         document.head.appendChild(style);
-        
-        // Generate emojis periodically
+
         setInterval(createFloatingEmoji, 1000);
     </script>
 </body>
-                          </html>
+                                             </html>
