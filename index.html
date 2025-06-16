@@ -1,170 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Fun Zone</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(-45deg, #1d2b64, #f8cdda);
-            color: #fff;
-            text-align: center;
-        }
-        nav {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-        }
-        nav button {
-            background: #ff4081;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        nav button:hover {
-            background: #e91e63;
-        }
-        .panel {
-            display: none;
-            padding: 30px;
-        }
-        .active {
-            display: block;
-        }
-        .health-bar {
-            height: 20px;
-            background: red;
-            border-radius: 10px;
-            margin: 10px auto;
-            width: 80%;
-        }
-        .game-area {
-            margin-top: 30px;
-        }
-        .fight-controls button {
-            background: #4caf50;
-            padding: 10px 25px;
-            border-radius: 50px;
-            font-size: 18px;
-            border: none;
-            margin: 10px;
-            cursor: pointer;
-        }
-        .fight-controls button:hover {
-            background: #388e3c;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ultimate Fun Zone</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(120deg, #f6d365, #fda085);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      background-color: #ff6f61;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      width: 100%;
+    }
+    .game-switcher {
+      display: flex;
+      gap: 20px;
+      margin: 20px;
+    }
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background-color: #333;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #555;
+    }
+    .game-container {
+      width: 90%;
+      max-width: 500px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      display: none;
+    }
+    .visible {
+      display: block;
+    }
+    .hp-bar {
+      height: 20px;
+      background-color: #ccc;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .hp {
+      height: 100%;
+      background-color: #4CAF50;
+      width: 100%;
+      transition: width 0.3s;
+    }
+  </style>
 </head>
 <body>
+  <header>
+    <h1>🔥 Ultimate Fun Zone 🔥</h1>
+  </header>
 
-<nav>
-    <button onclick="showPanel('click-panel')">Click Battle</button>
-    <button onclick="showPanel('fight-panel')">Fight Battle</button>
-</nav>
+  <div class="game-switcher">
+    <button onclick="showGame('clicker')">Click Battle</button>
+    <button onclick="showGame('fighter')">1v1 Fight</button>
+  </div>
 
-<div id="click-panel" class="panel active">
-    <h1>🔥 CLICK BATTLE 🔥</h1>
-    <p>Your Score: <span id="score">0</span></p>
-    <button onclick="clickScore()">CLICK!</button>
+  <!-- Clicker Game -->
+  <div id="clicker" class="game-container visible">
+    <h2>Click Battle</h2>
+    <p>Click as fast as you can!</p>
+    <h3>Score: <span id="click-score">0</span></h3>
+    <button onclick="increaseClickScore()">Click!</button>
+  </div>
+
+  <!-- Fighter Game -->
+  <div id="fighter" class="game-container">
+    <h2>Fight Battle</h2>
+    <p>Player vs Player Turn-Based Combat</p>
     <div>
-        <h2>🏆 Leaderboard</h2>
-        <div id="click-leaderboard">Loading...</div>
+      <h3>Player 1 HP</h3>
+      <div class="hp-bar"><div id="hp1" class="hp"></div></div>
+      <h3>Player 2 HP</h3>
+      <div class="hp-bar"><div id="hp2" class="hp"></div></div>
     </div>
-</div>
+    <p id="fight-log">Player 1's turn</p>
+    <button onclick="fightAction()">Attack</button>
+  </div>
 
-<div id="fight-panel" class="panel">
-    <h1>⚔️ FIGHT BATTLE ⚔️</h1>
-    <div class="game-area">
-        <p>Your Health</p>
-        <div class="health-bar" id="your-health" style="width: 100%;"></div>
-        <p>Enemy Health</p>
-        <div class="health-bar" id="enemy-health" style="width: 100%;"></div>
-        <div class="fight-controls">
-            <button onclick="attackEnemy()">ATTACK</button>
-            <button onclick="defendSelf()">DEFEND</button>
-        </div>
-        <div id="fight-result"></div>
-    </div>
-</div>
-
-<script>
-    let score = 0;
-
-    function showPanel(id) {
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+  <script>
+    function showGame(id) {
+      document.querySelectorAll('.game-container').forEach(div => div.classList.remove('visible'));
+      document.getElementById(id).classList.add('visible');
     }
 
-    function clickScore() {
-        score++;
-        document.getElementById('score').textContent = score;
-        // TODO: Firebase score update
+    // Clicker Game Logic
+    let clickScore = 0;
+    function increaseClickScore() {
+      clickScore++;
+      document.getElementById("click-score").textContent = clickScore;
     }
 
-    // Fighting Game Logic
-    let yourHealth = 100;
-    let enemyHealth = 100;
-    let isDefending = false;
+    // Fighter Game Logic
+    let hp1 = 100;
+    let hp2 = 100;
+    let turn = 1;
 
-    function updateHealthBars() {
-        document.getElementById('your-health').style.width = yourHealth + '%';
-        document.getElementById('enemy-health').style.width = enemyHealth + '%';
+    function fightAction() {
+      let damage = Math.floor(Math.random() * 15 + 5);
+      if (turn === 1) {
+        hp2 -= damage;
+        if (hp2 < 0) hp2 = 0;
+        document.getElementById("hp2").style.width = hp2 + "%";
+        document.getElementById("fight-log").textContent = `Player 1 hits Player 2 for ${damage} damage.`;
+        if (hp2 === 0) document.getElementById("fight-log").textContent += " Player 1 wins!";
+        else turn = 2;
+      } else {
+        hp1 -= damage;
+        if (hp1 < 0) hp1 = 0;
+        document.getElementById("hp1").style.width = hp1 + "%";
+        document.getElementById("fight-log").textContent = `Player 2 hits Player 1 for ${damage} damage.`;
+        if (hp1 === 0) document.getElementById("fight-log").textContent += " Player 2 wins!";
+        else turn = 1;
+      }
     }
-
-    function attackEnemy() {
-        const hit = Math.floor(Math.random() * 20 + 5);
-        if (Math.random() < 0.3) {
-            document.getElementById('fight-result').innerText = "MISS!";
-            return;
-        }
-        enemyHealth -= hit;
-        document.getElementById('fight-result').innerText = `You hit enemy for ${hit}!`;
-        enemyMove();
-        updateHealthBars();
-        checkWinner();
-    }
-
-    function defendSelf() {
-        isDefending = true;
-        document.getElementById('fight-result').innerText = "You're defending!";
-        enemyMove();
-    }
-
-    function enemyMove() {
-        const damage = Math.floor(Math.random() * 15 + 3);
-        if (isDefending) {
-            yourHealth -= Math.floor(damage / 2);
-            document.getElementById('fight-result').innerText += ` Enemy attacked but you blocked most of it! (-${Math.floor(damage/2)})`;
-        } else {
-            yourHealth -= damage;
-            document.getElementById('fight-result').innerText += ` Enemy hit you for ${damage}!`;
-        }
-        isDefending = false;
-        updateHealthBars();
-    }
-
-    function checkWinner() {
-        if (yourHealth <= 0) {
-            document.getElementById('fight-result').innerText = "💀 You lost!";
-            disableFightButtons();
-        } else if (enemyHealth <= 0) {
-            document.getElementById('fight-result').innerText = "🏆 You Win!";
-            disableFightButtons();
-        }
-    }
-
-    function disableFightButtons() {
-        document.querySelectorAll('.fight-controls button').forEach(btn => btn.disabled = true);
-    }
-</script>
-
+  </script>
 </body>
 </html>
