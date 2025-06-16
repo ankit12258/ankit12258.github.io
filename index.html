@@ -1,166 +1,164 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>1v1 Fighter Multiplayer</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(to right, #1f4037, #99f2c8);
-      text-align: center;
-      padding: 20px;
-    }
-    .game {
-      background: #fff;
-      border-radius: 15px;
-      padding: 20px;
-      margin: 0 auto;
-      max-width: 500px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-      border: none;
-      border-radius: 10px;
-      font-size: 18px;
-      background: #ff5f6d;
-      color: white;
-      cursor: pointer;
-    }
-    .hp-bar {
-      height: 20px;
-      width: 100%;
-      background: #ddd;
-      margin-bottom: 10px;
-      border-radius: 10px;
-    }
-    .hp-fill {
-      height: 100%;
-      background: #4caf50;
-      border-radius: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Drawing Battle - Multiplayer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f0f0f0;
+            text-align: center;
+        }
+        canvas {
+            border: 2px solid #000;
+            background: #fff;
+            touch-action: none;
+        }
+        #controls {
+            margin-top: 10px;
+        }
+        #chatbox {
+            margin-top: 10px;
+        }
+        input[type=text] {
+            padding: 10px;
+            width: 60%;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        #status {
+            margin: 15px 0;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-  <div class="game">
-    <h1>🔥 1v1 FIGHTER 🔥</h1>
-    <p id="room-info">Joining Room...</p>
-    <h2><span id="p1-name">Player 1</span> HP: <span id="p1-hp">100</span></h2>
-    <div class="hp-bar"><div id="p1-bar" class="hp-fill" style="width: 100%"></div></div>
-    <h2><span id="p2-name">Player 2</span> HP: <span id="p2-hp">100</span></h2>
-    <div class="hp-bar"><div id="p2-bar" class="hp-fill" style="width: 100%"></div></div>
-    <p id="status">Waiting for opponent...</p>
-    <button id="attack-btn" disabled>Attack!</button>
-  </div>
+    <h1>🎨 Drawing Battle</h1>
+    <p id="status">Connecting...</p>
+    <canvas id="canvas" width="300" height="300"></canvas>
+    <div id="controls">
+        <button onclick="clearCanvas()">Clear</button>
+    </div>
+    <div id="chatbox">
+        <input id="guessInput" type="text" placeholder="Enter your guess...">
+        <button onclick="submitGuess()">Guess</button>
+    </div>
+    <audio id="correctSound" src="https://www.soundjay.com/button/sounds/button-4.mp3"></audio>
+    <audio id="wrongSound" src="https://www.soundjay.com/button/sounds/beep-07.mp3"></audio>
 
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDubLMwib14sT3OS4bcKmQ7UFXgB_vrKPM",
-      authDomain: "clickbattle-7a8a2.firebaseapp.com",
-      databaseURL: "https://clickbattle-7a8a2-default-rtdb.firebaseio.com",
-      projectId: "clickbattle-7a8a2",
-      storageBucket: "clickbattle-7a8a2.appspot.com",
-      messagingSenderId: "935394160615",
-      appId: "1:935394160615:web:6d56d2000246734efe1742",
-      measurementId: "G-K7HNTKGGCV"
-    };
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDubLMwib14sT3OS4bcKmQ7UFXgB_vrKPM",
+            authDomain: "clickbattle-7a8a2.firebaseapp.com",
+            databaseURL: "https://clickbattle-7a8a2-default-rtdb.firebaseio.com",
+            projectId: "clickbattle-7a8a2",
+            storageBucket: "clickbattle-7a8a2.appspot.com",
+            messagingSenderId: "935394160615",
+            appId: "1:935394160615:web:6d56d2000246734efe1742"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        let drawing = false;
+        let isDrawer = false;
+        const playerId = "player" + Math.floor(Math.random() * 10000);
+        const roomRef = db.ref("rooms/room1");
 
-    const attackBtn = document.getElementById("attack-btn");
-    const statusText = document.getElementById("status");
-    const roomInfo = document.getElementById("room-info");
-    const playerId = "Player_" + Math.floor(Math.random() * 9000 + 1000);
-
-    let roomId = null;
-    let isPlayer1 = true;
-
-    // Matchmaking system
-    db.ref("rooms").once("value", snapshot => {
-      let found = false;
-      snapshot.forEach(child => {
-        if (!child.val().player2 && !found) {
-          roomId = child.key;
-          db.ref(`rooms/${roomId}/player2`).set({ name: playerId, hp: 100 });
-          isPlayer1 = false;
-          found = true;
-        }
-      });
-      if (!found) {
-        roomId = "room_" + Math.floor(Math.random() * 9999);
-        db.ref(`rooms/${roomId}`).set({
-          player1: { name: playerId, hp: 100 },
-          turn: "player1",
-          winner: null
+        // Connect to room
+        roomRef.child("players").once("value", snapshot => {
+            const players = snapshot.val() || {};
+            const keys = Object.keys(players);
+            if (keys.length === 0) {
+                isDrawer = true;
+                roomRef.child("players").child(playerId).set({ drawer: true });
+                roomRef.child("currentWord").set(getRandomWord());
+            } else {
+                roomRef.child("players").child(playerId).set({ drawer: false });
+            }
+            document.getElementById("status").innerText = isDrawer ? "You are drawing!" : "Guess the word!";
         });
-      }
-      setupGame();
-    });
 
-    function setupGame() {
-      roomInfo.textContent = `Room ID: ${roomId}`;
-      const roomRef = db.ref(`rooms/${roomId}`);
-
-      roomRef.on("value", snapshot => {
-        const data = snapshot.val();
-        if (!data.player1 || !data.player2) {
-          statusText.textContent = "Waiting for opponent...";
-          attackBtn.disabled = true;
-          return;
+        function drawLine(x, y, type) {
+            ctx.beginPath();
+            ctx.moveTo(type === "start" ? x : lastX, type === "start" ? y : lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            lastX = x;
+            lastY = y;
         }
 
-        document.getElementById("p1-name").textContent = data.player1.name;
-        document.getElementById("p1-hp").textContent = data.player1.hp;
-        document.getElementById("p1-bar").style.width = `${data.player1.hp}%`;
+        let lastX = 0, lastY = 0;
 
-        document.getElementById("p2-name").textContent = data.player2.name;
-        document.getElementById("p2-hp").textContent = data.player2.hp;
-        document.getElementById("p2-bar").style.width = `${data.player2.hp}%`;
-
-        if (data.winner) {
-          statusText.textContent = `${data.winner} WINS!`;
-          attackBtn.disabled = true;
-          return;
-        }
-
-        const myRole = isPlayer1 ? "player1" : "player2";
-        const opponentRole = isPlayer1 ? "player2" : "player1";
-
-        if (data.turn === myRole) {
-          statusText.textContent = "Your turn!";
-          attackBtn.disabled = false;
-        } else {
-          statusText.textContent = "Opponent's turn...";
-          attackBtn.disabled = true;
-        }
-      });
-
-      attackBtn.onclick = () => {
-        const room = db.ref(`rooms/${roomId}`);
-        room.once("value", snap => {
-          const data = snap.val();
-          const myRole = isPlayer1 ? "player1" : "player2";
-          const oppRole = isPlayer1 ? "player2" : "player1";
-
-          const damage = Math.floor(Math.random() * 21) + 10;
-          const newHP = Math.max(0, data[oppRole].hp - damage);
-          const updates = {
-            [`${oppRole}/hp`]: newHP,
-            turn: oppRole
-          };
-
-          if (newHP <= 0) {
-            updates.winner = data[myRole].name;
-          }
-
-          room.update(updates);
+        canvas.addEventListener("mousedown", e => {
+            if (!isDrawer) return;
+            drawing = true;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            drawLine(x, y, "start");
+            sendDraw(x, y, true);
         });
-      };
-    }
-  </script>
+
+        canvas.addEventListener("mousemove", e => {
+            if (!drawing || !isDrawer) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            drawLine(x, y);
+            sendDraw(x, y);
+        });
+
+        canvas.addEventListener("mouseup", () => drawing = false);
+        canvas.addEventListener("mouseleave", () => drawing = false);
+
+        function sendDraw(x, y, start = false) {
+            roomRef.child("drawing").push({ x, y, type: start ? "start" : "draw" });
+        }
+
+        roomRef.child("drawing").on("child_added", data => {
+            if (isDrawer) return;
+            const { x, y, type } = data.val();
+            drawLine(x, y, type);
+        });
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (isDrawer) roomRef.child("drawing").remove();
+        }
+
+        function getRandomWord() {
+            const words = ["cat", "car", "sun", "tree", "fish", "apple"];
+            return words[Math.floor(Math.random() * words.length)];
+        }
+
+        function submitGuess() {
+            const input = document.getElementById("guessInput");
+            const guess = input.value.toLowerCase();
+            input.value = "";
+            roomRef.child("currentWord").once("value", snapshot => {
+                const word = snapshot.val();
+                if (guess === word) {
+                    document.getElementById("correctSound").play();
+                    alert("🎉 Correct! You win!");
+                    clearCanvas();
+                    roomRef.child("drawing").remove();
+                    roomRef.child("currentWord").set(getRandomWord());
+                } else {
+                    document.getElementById("wrongSound").play();
+                }
+            });
+        }
+    </script>
 </body>
 </html>
