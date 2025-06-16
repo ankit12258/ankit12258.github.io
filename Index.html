@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOBILE FUN ZONE</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee);
+            text-align: center;
+            padding: 10px;
+            margin: 0;
+        }
+        .game {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px auto;
+            max-width: 90%;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 25px;
+            font-size: 16px;
+            width: 80%;
+            margin: 10px auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="game">
+        <h2>👉 TAP GAME 👈</h2>
+        <p>Score: <span id="score">0</span></p>
+        <button id="clicker">TAP FAST!</button>
+    </div>
+
+    <script>
+        let score = 0;
+        document.getElementById('clicker').addEventListener('click', function() {
+            score++;
+            document.getElementById('score').textContent = score;
+            this.style.background = `hsl(${score*10}, 70%, 50%)`;
+        });
+    </script>
+</body>
+</html>
