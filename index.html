@@ -2,50 +2,323 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOBILE FUN ZONE</title>
+    <title>ULTIMATE FUN ZONE</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee);
+            font-family: 'Comic Sans MS', cursive;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
             text-align: center;
             padding: 10px;
             margin: 0;
+            overflow-x: hidden;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         .game {
-            background: white;
-            border-radius: 15px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
             padding: 15px;
-            margin: 15px auto;
-            max-width: 90%;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            margin: 20px auto;
+            max-width: 95%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .game:hover {
+            transform: scale(1.02);
         }
         button {
-            background: #4CAF50;
+            background: #FF6B6B;
             color: white;
             border: none;
-            padding: 12px;
-            border-radius: 25px;
+            padding: 12px 25px;
+            border-radius: 50px;
             font-size: 16px;
-            width: 80%;
-            margin: 10px auto;
-            display: block;
+            margin: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background: #FF5252;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        #ball {
+            width: 50px;
+            height: 50px;
+            background: #FF9E00;
+            border-radius: 50%;
+            position: relative;
+            margin: 20px auto;
+            cursor: pointer;
+        }
+        #typing-display {
+            font-size: 24px;
+            min-height: 40px;
+            margin: 15px;
+            color: #333;
+        }
+        #memory-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 300px;
+        }
+        .memory-card {
+            height: 60px;
+            background: #6B5B95;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .memory-card.flipped {
+            background: white;
+            color: #333;
         }
     </style>
 </head>
 <body>
+    <h1>🎮 ULTIMATE FUN ZONE 🎮</h1>
+    <p>Created by YOU! Refresh for new effects!</p>
+
+    <!-- Game 1: Super Clicker -->
     <div class="game">
-        <h2>👉 TAP GAME 👈</h2>
+        <h2>⚡ SUPER CLICKER ⚡</h2>
         <p>Score: <span id="score">0</span></p>
-        <button id="clicker">TAP FAST!</button>
+        <button id="clicker">SMASH ME!</button>
+        <div id="click-effects"></div>
+    </div>
+
+    <!-- Game 2: Bouncy Ball -->
+    <div class="game">
+        <h2>🏀 BOUNCY BALL 🏀</h2>
+        <p>Click the ball to bounce it!</p>
+        <div id="ball"></div>
+        <p>Bounces: <span id="bounces">0</span></p>
+    </div>
+
+    <!-- Game 3: Memory Game -->
+    <div class="game">
+        <h2>🧠 MEMORY CHALLENGE 🧠</h2>
+        <p>Find all matching pairs!</p>
+        <div id="memory-board"></div>
+        <p>Matches: <span id="matches">0</span>/8</p>
+        <button id="reset-memory">RESET</button>
+    </div>
+
+    <!-- Game 4: Reaction Test -->
+    <div class="game">
+        <h2>⏱️ REACTION TEST ⏱️</h2>
+        <p>Click when the box turns GREEN!</p>
+        <div id="reaction-box" style="width:100px;height:100px;margin:20px auto;background:red;"></div>
+        <p>Your time: <span id="reaction-time">0</span>ms</p>
+        <button id="start-reaction">START</button>
     </div>
 
     <script>
+        // ===== GAME 1: SUPER CLICKER =====
         let score = 0;
-        document.getElementById('clicker').addEventListener('click', function() {
+        const clicker = document.getElementById('clicker');
+        clicker.addEventListener('click', function() {
             score++;
             document.getElementById('score').textContent = score;
-            this.style.background = `hsl(${score*10}, 70%, 50%)`;
+            
+            // Visual effects
+            this.textContent = `BOOM! (${score})`;
+            this.style.background = `hsl(${score*10 % 360}, 80%, 60%)`;
+            
+            // Create explosion effect
+            const explosion = document.createElement('div');
+            explosion.style.position = 'absolute';
+            explosion.style.left = `${Math.random()*80 + 10}%`;
+            explosion.style.top = '70%';
+            explosion.style.fontSize = '24px';
+            explosion.textContent = ['💥','✨','🌟','🎯','🔥'][Math.floor(Math.random()*5)];
+            document.getElementById('click-effects').appendChild(explosion);
+            
+            setTimeout(() => {
+                explosion.remove();
+            }, 1000);
         });
+
+        // ===== GAME 2: BOUNCY BALL =====
+        const ball = document.getElementById('ball');
+        let bounces = 0;
+        let yPosition = 0;
+        let ySpeed = 0;
+        const gravity = 0.4;
+        
+        ball.addEventListener('click', function() {
+            ySpeed = -10;
+            bounces++;
+            document.getElementById('bounces').textContent = bounces;
+            this.style.background = `hsl(${Math.random()*360}, 80%, 60%)`;
+        });
+        
+        function updateBall() {
+            ySpeed += gravity;
+            yPosition += ySpeed;
+            
+            if (yPosition > 0) {
+                yPosition = 0;
+                ySpeed *= -0.8;
+            }
+            
+            ball.style.transform = `translateY(${yPosition}px)`;
+            requestAnimationFrame(updateBall);
+        }
+        updateBall();
+
+        // ===== GAME 3: MEMORY GAME =====
+        const memoryBoard = document.getElementById('memory-board');
+        const symbols = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
+        let cards = [...symbols, ...symbols];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        
+        // Shuffle cards
+        cards.sort(() => Math.random() - 0.5);
+        
+        // Create board
+        cards.forEach((symbol, index) => {
+            const card = document.createElement('div');
+            card.className = 'memory-card';
+            card.dataset.index = index;
+            card.dataset.symbol = symbol;
+            card.textContent = '?';
+            card.addEventListener('click', flipCard);
+            memoryBoard.appendChild(card);
+        });
+        
+        function flipCard() {
+            if (flippedCards.length < 2 && !this.classList.contains('flipped')) {
+                this.classList.add('flipped');
+                this.textContent = this.dataset.symbol;
+                flippedCards.push(this);
+                
+                if (flippedCards.length === 2) {
+                    checkMatch();
+                }
+            }
+        }
+        
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            
+            if (card1.dataset.symbol === card2.dataset.symbol) {
+                matchedPairs++;
+                document.getElementById('matches').textContent = matchedPairs;
+                flippedCards = [];
+                
+                if (matchedPairs === 8) {
+                    setTimeout(() => alert('🎉 You won!'), 500);
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    card1.textContent = '?';
+                    card2.textContent = '?';
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+        
+        document.getElementById('reset-memory').addEventListener('click', () => {
+            memoryBoard.innerHTML = '';
+            cards.sort(() => Math.random() - 0.5);
+            matchedPairs = 0;
+            document.getElementById('matches').textContent = '0';
+            
+            cards.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.index = index;
+                card.dataset.symbol = symbol;
+                card.textContent = '?';
+                card.addEventListener('click', flipCard);
+                memoryBoard.appendChild(card);
+            });
+        });
+
+        // ===== GAME 4: REACTION TEST =====
+        const reactionBox = document.getElementById('reaction-box');
+        const startBtn = document.getElementById('start-reaction');
+        let startTime;
+        let timeoutId;
+        
+        startBtn.addEventListener('click', startReactionTest);
+        
+        function startReactionTest() {
+            reactionBox.style.background = 'red';
+            document.getElementById('reaction-time').textContent = '0';
+            startBtn.disabled = true;
+            
+            const delay = 1000 + Math.random() * 4000;
+            timeoutId = setTimeout(() => {
+                reactionBox.style.background = 'green';
+                startTime = new Date().getTime();
+                reactionBox.onclick = recordReactionTime;
+            }, delay);
+        }
+        
+        function recordReactionTime() {
+            const endTime = new Date().getTime();
+            const reactionTime = endTime - startTime;
+            document.getElementById('reaction-time').textContent = reactionTime;
+            reactionBox.style.background = 'red';
+            reactionBox.onclick = null;
+            startBtn.disabled = false;
+            
+            // Color feedback
+            if (reactionTime < 300) {
+                reactionBox.style.boxShadow = '0 0 20px gold';
+                setTimeout(() => {
+                    reactionBox.style.boxShadow = 'none';
+                }, 1000);
+            }
+        }
+
+        // ===== BACKGROUND EFFECTS =====
+        // Create floating emojis
+        function createFloatingEmoji() {
+            const emoji = document.createElement('div');
+            emoji.textContent = ['🎮', '🎲', '🎯', '🧩', '🎳', '🎰'][Math.floor(Math.random()*6)];
+            emoji.style.position = 'fixed';
+            emoji.style.left = Math.random() * 100 + 'vw';
+            emoji.style.top = '-50px';
+            emoji.style.fontSize = (Math.random() * 30 + 20) + 'px';
+            emoji.style.opacity = Math.random() * 0.5 + 0.3;
+            emoji.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
+            document.body.appendChild(emoji);
+            
+            setTimeout(() => {
+                emoji.remove();
+            }, 15000);
+        }
+        
+        // Add floating animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes float {
+                to { transform: translateY(calc(100vh + 50px)) rotate(${Math.random() * 360}deg); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Generate emojis periodically
+        setInterval(createFloatingEmoji, 1000);
     </script>
 </body>
-</html>
+                          </html>
