@@ -1,149 +1,169 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultimate Fun Zone</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5);
-            text-align: center;
-            padding: 20px;
             margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(-45deg, #1d2b64, #f8cdda);
+            color: #fff;
+            text-align: center;
         }
-        .game-panel {
-            background: rgba(255,255,255,0.9);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 15px auto;
-            max-width: 400px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
         }
-        button {
-            background: #4CAF50;
-            color: white;
+        nav button {
+            background: #ff4081;
             border: none;
-            padding: 15px 30px;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        nav button:hover {
+            background: #e91e63;
+        }
+        .panel {
+            display: none;
+            padding: 30px;
+        }
+        .active {
+            display: block;
+        }
+        .health-bar {
+            height: 20px;
+            background: red;
+            border-radius: 10px;
+            margin: 10px auto;
+            width: 80%;
+        }
+        .game-area {
+            margin-top: 30px;
+        }
+        .fight-controls button {
+            background: #4caf50;
+            padding: 10px 25px;
             border-radius: 50px;
             font-size: 18px;
+            border: none;
             margin: 10px;
             cursor: pointer;
-            transition: all 0.3s;
         }
-        button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px #4CAF50;
-        }
-        #leaderboard {
-            background: rgba(0,0,0,0.1);
-            padding: 15px;
-            border-radius: 10px;
-        }
-        .hidden {
-            display: none;
+        .fight-controls button:hover {
+            background: #388e3c;
         }
     </style>
 </head>
 <body>
-    <div class="game-panel">
-        <h1>🔥 LIVE CLICK BATTLE 🔥</h1>
-        <p>Compete against players worldwide in real-time!</p>
-        <div id="player-info">
-            <h2>Your Score: <span id="score">0</span></h2>
-            <button id="clicker">CLICK TO WIN!</button>
-            <button id="startTimerGame">⏳ Timer Challenge</button>
-        </div>
-        <p id="timerDisplay" class="hidden">Time Left: <span id="timer">10</span>s</p>
-        <audio id="click-sound" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
-    </div><div class="game-panel" id="leaderboard">
-    <h2>🏆 GLOBAL LEADERBOARD</h2>
-    <div id="scores-list">Loading...</div>
+
+<nav>
+    <button onclick="showPanel('click-panel')">Click Battle</button>
+    <button onclick="showPanel('fight-panel')">Fight Battle</button>
+</nav>
+
+<div id="click-panel" class="panel active">
+    <h1>🔥 CLICK BATTLE 🔥</h1>
+    <p>Your Score: <span id="score">0</span></p>
+    <button onclick="clickScore()">CLICK!</button>
+    <div>
+        <h2>🏆 Leaderboard</h2>
+        <div id="click-leaderboard">Loading...</div>
+    </div>
 </div>
 
-<!-- Firebase Integration -->
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<div id="fight-panel" class="panel">
+    <h1>⚔️ FIGHT BATTLE ⚔️</h1>
+    <div class="game-area">
+        <p>Your Health</p>
+        <div class="health-bar" id="your-health" style="width: 100%;"></div>
+        <p>Enemy Health</p>
+        <div class="health-bar" id="enemy-health" style="width: 100%;"></div>
+        <div class="fight-controls">
+            <button onclick="attackEnemy()">ATTACK</button>
+            <button onclick="defendSelf()">DEFEND</button>
+        </div>
+        <div id="fight-result"></div>
+    </div>
+</div>
 
 <script>
-    // Firebase Setup
-    const firebaseConfig = {
-        apiKey: "AIzaSyDubLMwib14sT3OS4bcKmQ7UFXgB_vrKPM",
-        authDomain: "clickbattle-7a8a2.firebaseapp.com",
-        databaseURL: "https://clickbattle-7a8a2-default-rtdb.firebaseio.com",
-        projectId: "clickbattle-7a8a2",
-        storageBucket: "clickbattle-7a8a2.appspot.com",
-        messagingSenderId: "935394160615",
-        appId: "1:935394160615:web:6d56d2000246734efe1742",
-        measurementId: "G-K7HNTKGGCV"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    // Game Logic
     let score = 0;
-    const playerId = "Player_" + Math.floor(Math.random() * 9000 + 1000);
-    const scoresRef = database.ref('scores');
-    const clicker = document.getElementById('clicker');
-    const clickSound = document.getElementById("click-sound");
 
-    clicker.addEventListener('click', function () {
-        clickSound.play();
+    function showPanel(id) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function clickScore() {
         score++;
-        if (Math.random() < 0.1) {
-            score += 5;
-            alert("🔥 BONUS +5 POINTS!");
+        document.getElementById('score').textContent = score;
+        // TODO: Firebase score update
+    }
+
+    // Fighting Game Logic
+    let yourHealth = 100;
+    let enemyHealth = 100;
+    let isDefending = false;
+
+    function updateHealthBars() {
+        document.getElementById('your-health').style.width = yourHealth + '%';
+        document.getElementById('enemy-health').style.width = enemyHealth + '%';
+    }
+
+    function attackEnemy() {
+        const hit = Math.floor(Math.random() * 20 + 5);
+        if (Math.random() < 0.3) {
+            document.getElementById('fight-result').innerText = "MISS!";
+            return;
         }
-        document.getElementById('score').textContent = score;
-        navigator.vibrate && navigator.vibrate(100);
+        enemyHealth -= hit;
+        document.getElementById('fight-result').innerText = `You hit enemy for ${hit}!`;
+        enemyMove();
+        updateHealthBars();
+        checkWinner();
+    }
 
-        scoresRef.child(playerId).set({
-            score: score,
-            lastUpdated: firebase.database.ServerValue.TIMESTAMP
-        });
+    function defendSelf() {
+        isDefending = true;
+        document.getElementById('fight-result').innerText = "You're defending!";
+        enemyMove();
+    }
 
-        this.style.transform = "scale(0.95)";
-        setTimeout(() => { this.style.transform = "scale(1)"; }, 100);
-    });
+    function enemyMove() {
+        const damage = Math.floor(Math.random() * 15 + 3);
+        if (isDefending) {
+            yourHealth -= Math.floor(damage / 2);
+            document.getElementById('fight-result').innerText += ` Enemy attacked but you blocked most of it! (-${Math.floor(damage/2)})`;
+        } else {
+            yourHealth -= damage;
+            document.getElementById('fight-result').innerText += ` Enemy hit you for ${damage}!`;
+        }
+        isDefending = false;
+        updateHealthBars();
+    }
 
-    // Timer Challenge Mode
-    const startTimerGame = document.getElementById("startTimerGame");
-    const timerDisplay = document.getElementById("timerDisplay");
-    const timerSpan = document.getElementById("timer");
-    startTimerGame.addEventListener("click", () => {
-        score = 0;
-        document.getElementById('score').textContent = score;
-        let timeLeft = 10;
-        timerDisplay.classList.remove("hidden");
-        timerSpan.textContent = timeLeft;
+    function checkWinner() {
+        if (yourHealth <= 0) {
+            document.getElementById('fight-result').innerText = "💀 You lost!";
+            disableFightButtons();
+        } else if (enemyHealth <= 0) {
+            document.getElementById('fight-result').innerText = "🏆 You Win!";
+            disableFightButtons();
+        }
+    }
 
-        const interval = setInterval(() => {
-            timeLeft--;
-            timerSpan.textContent = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(interval);
-                timerDisplay.classList.add("hidden");
-                alert("⏰ Time's up! Your Score: " + score);
-            }
-        }, 1000);
-    });
-
-    // Live Leaderboard
-    scoresRef.orderByChild('score').limitToLast(10).on('value', (snapshot) => {
-        const scores = [];
-        snapshot.forEach(child => {
-            scores.push({
-                id: child.key,
-                score: child.val().score
-            });
-        });
-        const sorted = scores.sort((a, b) => b.score - a.score);
-        let leaderboardHTML = '<ol>';
-        sorted.forEach(player => {
-            const isYou = player.id === playerId ? ' (YOU!)' : '';
-            leaderboardHTML += `<li>${player.id}: ${player.score}${isYou}</li>`;
-        });
-        leaderboardHTML += '</ol>';
-        document.getElementById('scores-list').innerHTML = leaderboardHTML;
-    });
+    function disableFightButtons() {
+        document.querySelectorAll('.fight-controls button').forEach(btn => btn.disabled = true);
+    }
 </script>
 
 </body>
